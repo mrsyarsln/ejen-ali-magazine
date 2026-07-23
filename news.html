@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>M.A.T.A News & Updates</title>
+  <style>
+    /* Reset & Dark Cyber Theme */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Courier New', Courier, monospace;
+      background-color: #0b0f19;
+      color: #fff;
+      overflow-x: hidden;
+      position: relative;
+      min-height: 100vh;
+    }
+
+    /* --- FULL-PAGE BACKGROUND IMAGE WITH LOW OPACITY --- */
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background-image: url('img/bg5.jpg');
+      background-position: center;
+      background-repeat: no-repeat;
+      background-size: cover;
+      background-attachment: fixed;
+      opacity: 0.15; /* Low opacity around 15% */
+      pointer-events: none; /* Allows clicks to pass through */
+      z-index: -1; /* Placed behind all content */
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 30px 60px 20px 60px;
+    }
+
+    .header-content {
+      text-align: left;
+    }
+
+    header h1 {
+      font-size: 2.2rem;
+      letter-spacing: 3px;
+      color: #00e5ff;
+      margin-bottom: 8px;
+    }
+
+    header p {
+      color: #8892b0;
+      font-size: 0.9rem;
+      letter-spacing: 1px;
+    }
+
+    /* Horizontal Gallery Section */
+    .gallery-container {
+      display: flex;
+      gap: 30px;
+      overflow-x: auto;
+      padding: 40px 60px;
+      scroll-snap-type: x mandatory;
+      scrollbar-width: none; /* Hide scrollbar for clean look */
+    }
+
+    .gallery-container::-webkit-scrollbar {
+      display: none;
+    }
+
+    /* Individual News Card */
+    .news-card {
+      flex: 0 0 550px;
+      height: 380px;
+      position: relative;
+      border-radius: 20px;
+      overflow: hidden;
+      scroll-snap-align: center;
+      background-color: rgba(10, 25, 47, 0.9);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+      border: 1px solid rgba(0, 229, 255, 0.3);
+      transition: border-color 0.4s ease, box-shadow 0.4s ease;
+    }
+
+    .news-card:hover {
+      border-color: #00e5ff;
+      box-shadow: 0 0 25px rgba(0, 229, 255, 0.4);
+    }
+
+    .news-card img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      opacity: 0.7;
+      transition: transform 0.4s ease, opacity 0.4s ease;
+    }
+
+    .news-card:hover img {
+      transform: scale(1.03);
+      opacity: 0.9;
+    }
+
+    /* Overlay Content inside the card */
+    .card-info {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      padding: 30px;
+      background: linear-gradient(to top, rgba(5, 11, 20, 0.95), transparent);
+      pointer-events: none;
+    }
+
+    .card-info span {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      color: #00e5ff;
+      display: block;
+      margin-bottom: 6px;
+    }
+
+    .card-info h3 {
+      font-size: 1.5rem;
+      letter-spacing: 1px;
+      color: #fff;
+    }
+
+    /* Read Button Link on Card */
+    .read-btn {
+      position: absolute;
+      top: 25px;
+      right: 25px;
+      width: 45px;
+      height: 45px;
+      background-color: rgba(0, 229, 255, 0.1);
+      backdrop-filter: blur(5px);
+      border: 1px solid rgba(0, 229, 255, 0.3);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.1rem;
+      color: #00e5ff;
+      text-decoration: none;
+      transition: all 0.3s ease;
+      z-index: 2;
+    }
+
+    .news-card:hover .read-btn {
+      background-color: #00e5ff;
+      color: #0b0f19;
+      box-shadow: 0 0 15px rgba(0, 229, 255, 0.5);
+    }
+
+    /* Simple Bottom-Left Back Link */
+    .bottom-back-link {
+      position: fixed;
+      bottom: 30px;
+      left: 50px;
+      z-index: 30;
+      color: #00e5ff;
+      text-decoration: none;
+      font-size: 0.9rem;
+      letter-spacing: 1px;
+      background: rgba(0, 229, 255, 0.1);
+      border: 1px solid rgba(0, 229, 255, 0.3);
+      padding: 8px 16px;
+      border-radius: 20px;
+      transition: background 0.3s;
+      font-family: 'Courier New', Courier, monospace;
+    }
+
+    .bottom-back-link:hover {
+      background: rgba(0, 229, 255, 0.2);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Audio Elemen untuk mengekalkan lagu merentasi halaman -->
+  <audio id="bgAudio" src="song ejen ali.mp3" preload="auto" loop></audio>
+
+  <header>
+    <div class="header-content">
+      <h1>NEWS M.A.T.A</h1>
+      <p>Scroll horizontally to check the latest agency announcements.</p>
+    </div>
+  </header>
+
+  <!-- Bottom Left Back Link dengan fungsi simpan masa audio -->
+  <a href="home.html" class="bottom-back-link" onclick="saveAudioState()">&larr; Back</a>
+
+  <!-- Horizontal Scroll Gallery -->
+  <div class="gallery-container">
+    
+    <!-- News Card 1 -->
+    <div class="news-card">
+      <img src="news1.png" alt="Ejen Ali MLBB M7">
+      <a href="https://www.xtra.com.my/ejen-ali-cipta-sejarah-muncul-di-pentas-dunia-kejohanan-mlbb-m7/" target="_blank" rel="noopener noreferrer" class="read-btn" aria-label="Read Article">&rarr;</a>
+      <div class="card-info">
+        <span>Global Stage &bull; Esports</span>
+        <h3>Ejen Ali Cipta Sejarah Di Pentas Dunia MLBB M7</h3>
+      </div>
+    </div>
+
+    <!-- News Card 2 -->
+    <div class="news-card">
+      <img src="news2.png" alt="Muzik Video Penjuara">
+      <a href="https://www.xtra.com.my/muzik-video-rasmi-penjuara-dilancar-lagu-tema-filem-ejen-ali-the-movie-2-tersenarai-dalam-carta-muzik-muzik-40/" target="_blank" rel="noopener noreferrer" class="read-btn" aria-label="Read Article">&rarr;</a>
+      <div class="card-info">
+        <span>Soundtrack &bull; Muzik Muzik 40</span>
+        <h3>Muzik Video Rasmi Penjuara Dilancar</h3>
+      </div>
+    </div>
+
+    <!-- News Card 3 -->
+    <div class="news-card">
+      <img src="news3.png" alt="Ejen Ali The Movie 2 Box Office">
+      <a href="https://www.xtra.com.my/ejen-ali-the-movie-2-raih-rm21-9-juta-tawan-musim-cuti-sekolah/" target="_blank" rel="noopener noreferrer" class="read-btn" aria-label="Read Article">&rarr;</a>
+      <div class="card-info">
+        <span>Box Office &bull; Milestone</span>
+        <h3>Ejen Ali The Movie 2 Raih RM21.9 Juta</h3>
+      </div>
+    </div>
+
+    <!-- News Card 4 -->
+    <div class="news-card">
+      <img src="news4.png" alt="Ejen Ali The Movie 2 Record Breaking">
+      <a href="https://www.xtra.com.my/rm55-1-juta-ejen-ali-the-movie-2-raih-kutipan-filem-animasi-tempatan-antarabangsa-tertinggi-sepanjang-zaman/" target="_blank" rel="noopener noreferrer" class="read-btn" aria-label="Read Article">&rarr;</a>
+      <div class="card-info">
+        <span>Record Breaking &bull; Animation</span>
+        <h3>RM55.1 Juta Kutipan Tertinggi Sepanjang Zaman</h3>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    const bgAudio = document.getElementById('bgAudio');
+
+    // Baca masa semasa lagu dari LocalStorage apabila halaman dimuatkan
+    window.addEventListener('DOMContentLoaded', () => {
+      const savedTime = localStorage.getItem('ejenAliAudioTime');
+      const isPlaying = localStorage.getItem('ejenAliAudioPlaying') === 'true';
+
+      if (savedTime) {
+        bgAudio.currentTime = parseFloat(savedTime);
+      }
+
+      if (isPlaying) {
+        bgAudio.play().catch(() => {
+          // Jika pelayar menyekat autoplay, buka kunci dengan klik pertama
+          const unlockAudio = () => {
+            bgAudio.play();
+            localStorage.setItem('ejenAliAudioPlaying', 'true');
+            window.removeEventListener('click', unlockAudio);
+          };
+          window.addEventListener('click', unlockAudio);
+        });
+      }
+    });
+
+    // Simpan masa lagu ke LocalStorage setiap 0.5 saat
+    setInterval(() => {
+      if (!bgAudio.paused) {
+        localStorage.setItem('ejenAliAudioTime', bgAudio.currentTime);
+        localStorage.setItem('ejenAliAudioPlaying', 'true');
+      }
+    }, 500);
+
+    // Fungsi untuk simpan status apabila klik butang Kembali (Back)
+    function saveAudioState() {
+      localStorage.setItem('ejenAliAudioTime', bgAudio.currentTime);
+      localStorage.setItem('ejenAliAudioPlaying', !bgAudio.paused);
+    }
+  </script>
+
+</body>
+</html>

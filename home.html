@@ -1,0 +1,864 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ejen Ali - Central Command (Centered HUD)</title>
+  <style>
+    /* Reset & Dark Cyber Theme */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body, html {
+      width: 100%;
+      height: 100vh;
+      overflow: hidden;
+      font-family: 'Courier New', Courier, monospace;
+      color: #00e5ff;
+      user-select: none;
+      background-color: #020408;
+    }
+
+    /* Interactive Map Workspace */
+    .workspace {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+      cursor: grab;
+    }
+
+    .workspace:active {
+      cursor: grabbing;
+    }
+
+    /* --- ADVANCED IRIS COMMAND CENTER ANIMATED BACKGROUND --- */
+    .command-bg {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: radial-gradient(circle at center, #06101e 0%, #020408 85%);
+      overflow: hidden;
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    /* Subtle Blue Digital Grid */
+    .bg-grid {
+      position: absolute;
+      width: 300%;
+      height: 300%;
+      top: -100%;
+      left: -100%;
+      background-image: 
+        linear-gradient(rgba(0, 242, 255, 0.035) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0, 242, 255, 0.035) 1px, transparent 1px);
+      background-size: 45px 45px;
+      animation: gridDrift 40s linear infinite;
+      transition: transform 0.1s ease-out;
+    }
+
+    @keyframes gridDrift {
+      0% { transform: translate(0, 0) rotate(0deg); }
+      100% { transform: translate(25px, 25px) rotate(0deg); }
+    }
+
+    /* Hexagon Pattern Overlay */
+    .hex-pattern {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      background-image: radial-gradient(rgba(0, 229, 255, 0.05) 1px, transparent 1px);
+      background-size: 30px 30px;
+      opacity: 0.4;
+    }
+
+    /* Canvas Layer for Network Nodes and Connection Lines */
+    #networkCanvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 1;
+    }
+
+    /* Soft Holographic Scan Waves */
+    .scan-wave {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: linear-gradient(
+        to bottom,
+        transparent 0%,
+        rgba(0, 229, 255, 0.01) 48%,
+        rgba(0, 229, 255, 0.05) 50%,
+        rgba(0, 229, 255, 0.01) 52%,
+        transparent 100%
+      );
+      background-size: 100% 200vh;
+      animation: scanLoop 8s linear infinite;
+      z-index: 2;
+    }
+
+    @keyframes scanLoop {
+      0% { transform: translateY(-100%); }
+      100% { transform: translateY(100%); }
+    }
+
+    /* Floating Data Particles */
+    .bg-particles {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      pointer-events: none;
+      z-index: 2;
+    }
+
+    .particle {
+      position: absolute;
+      width: 2px;
+      height: 2px;
+      background: #00e5ff;
+      border-radius: 50%;
+      box-shadow: 0 0 6px #00e5ff;
+      animation: floatParticle 7s linear infinite;
+    }
+
+    @keyframes floatParticle {
+      0% { transform: translateY(100vh) scale(0.5); opacity: 0; }
+      50% { opacity: 0.7; }
+      100% { transform: translateY(-50px) scale(1.3); opacity: 0; }
+    }
+
+    /* --- TOP HEADER NAVIGATION --- */
+    .hud-top {
+      position: absolute;
+      top: 20px;
+      left: 40px;
+      right: 40px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      z-index: 10;
+      pointer-events: none;
+    }
+
+    .hud-logo-container {
+      display: flex;
+      align-items: center;
+      pointer-events: auto;
+    }
+
+    .hud-logo {
+      height: 110px;
+      object-fit: contain;
+      filter: drop-shadow(0 0 16px rgba(255, 0, 60, 0.9));
+    }
+
+    /* Sliding Navigation Container for the menu links - aligned vertically with top buttons */
+    .nav-slider-wrapper {
+      position: absolute;
+      left: 50%;
+      top: 20px;
+      transform: translateX(-50%) translateY(-120px);
+      opacity: 0;
+      pointer-events: none;
+      filter: drop-shadow(0 0 0px rgba(0, 229, 255, 0));
+      transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.5s ease, filter 0.5s ease;
+      z-index: 15;
+    }
+
+    .nav-slider-wrapper.panel-visible {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
+      pointer-events: auto;
+      filter: drop-shadow(0 0 15px rgba(0, 229, 255, 0.4));
+    }
+
+    .top-nav-menu {
+      display: flex;
+      align-items: center;
+      justify-content: space-around;
+      gap: 20px;
+      background: rgba(2, 10, 20, 0.85);
+      border: 1px solid rgba(0, 229, 255, 0.4);
+      border-radius: 8px;
+      padding: 12px 28px;
+      backdrop-filter: blur(10px);
+      box-shadow: 0 0 15px rgba(0, 229, 255, 0.2);
+    }
+
+    .top-nav-link {
+      background: transparent;
+      border: none;
+      color: #8892b0;
+      font-family: inherit;
+      font-size: 0.85rem;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: color 0.3s ease, text-shadow 0.3s ease, transform 0.3s ease;
+      white-space: nowrap;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      text-decoration: none;
+    }
+
+    .top-nav-link svg {
+      width: 16px;
+      height: 16px;
+      fill: currentColor;
+    }
+
+    .top-nav-link:hover, .top-nav-link.active {
+      color: #00e5ff;
+      text-shadow: 0 0 10px rgba(0, 229, 255, 0.8);
+      transform: scale(1.05);
+    }
+
+    .top-right-actions {
+      display: flex;
+      gap: 15px;
+      pointer-events: auto;
+    }
+
+    .action-btn {
+      background: rgba(2, 10, 20, 0.8);
+      border: 1px solid rgba(0, 229, 255, 0.4);
+      color: #00e5ff;
+      padding: 8px 18px;
+      font-family: inherit;
+      font-size: 0.8rem;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      border-radius: 4px;
+      backdrop-filter: blur(5px);
+      box-shadow: 0 0 10px rgba(0, 229, 255, 0.15);
+      transition: all 0.3s ease;
+      text-decoration: none;
+    }
+
+    .action-btn.menu-btn {
+      background: #fff;
+      color: #020408;
+      border-color: #fff;
+      font-weight: bold;
+    }
+
+    .action-btn:hover {
+      background: rgba(0, 229, 255, 0.2);
+      border-color: #00e5ff;
+      color: #fff;
+      box-shadow: 0 0 15px rgba(0, 229, 255, 0.5);
+    }
+
+    /* --- LEFT SIDE: VERTICAL SOCIAL MEDIA ICONS --- */
+    .footer-social-container {
+      position: absolute;
+      top: 55%;
+      left: 40px;
+      transform: translateY(-50%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 20px;
+      z-index: 10;
+      pointer-events: auto;
+    }
+
+    .social-icon-btn {
+      width: 45.24px;
+      height: 45.24px;
+      background: rgba(2, 10, 20, 0.9);
+      border: 1.5px solid rgba(0, 229, 255, 0.6);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #00e5ff;
+      text-decoration: none;
+      box-shadow: 0 0 16px rgba(0, 229, 255, 0.35);
+      transition: all 0.3s ease;
+    }
+
+    .social-icon-btn svg {
+      width: 20.88px;
+      height: 20.88px;
+      fill: currentColor;
+    }
+
+    .social-icon-btn:hover {
+      background: rgba(0, 229, 255, 0.3);
+      border-color: #00e5ff;
+      color: #fff;
+      box-shadow: 0 0 24px rgba(0, 229, 255, 0.85);
+      transform: scale(1.12);
+    }
+
+    /* --- RIGHT SIDE: EJEN ALI SHOWCASE FRAME --- */
+    .character-showcase {
+      position: absolute;
+      right: 40px;
+      top: 55%;
+      transform: translateY(-50%);
+      width: 400px;
+      height: 520px;
+      border: 1px solid rgba(0, 229, 255, 0.35);
+      border-radius: 8px;
+      background: rgba(2, 10, 20, 0.7);
+      backdrop-filter: blur(10px);
+      box-shadow: 0 0 35px rgba(0, 229, 255, 0.2);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: space-between;
+      z-index: 10;
+      padding: 20px;
+      pointer-events: auto;
+      overflow: hidden;
+    }
+
+    .character-showcase img {
+      width: 100%;
+      height: calc(100% - 40px);
+      object-fit: contain;
+      object-position: center;
+      transform: none;
+      filter: drop-shadow(0 0 20px rgba(0, 229, 255, 0.6));
+      animation: characterFloat 4s ease-in-out infinite alternate;
+    }
+
+    @keyframes characterFloat {
+      0% { transform: translateY(0px); }
+      100% { transform: translateY(-8px); }
+    }
+
+    .character-tag {
+      width: 100%;
+      border-top: 1px solid rgba(0, 229, 255, 0.3);
+      padding-top: 15px;
+      text-align: left;
+      font-size: 0.85rem;
+      letter-spacing: 2px;
+      color: #00e5ff;
+      text-transform: uppercase;
+    }
+
+    /* --- CENTERED SINGLE GROUP CONTAINER --- */
+    .centered-hud-group {
+      position: absolute;
+      top: 56%; 
+      left: 47%;
+      transform: translate(-50%, -50%); 
+      width: 800px;
+      height: 800px;
+      pointer-events: none; 
+      z-index: 5;
+      transition: transform 0.1s ease-out;
+    }
+
+    /* --- IRIS COMMAND HUB --- */
+    .iris-hub-container {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 650px;
+      height: 650px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .iris-ring {
+      position: absolute;
+      border-radius: 50%;
+      border: 1px dashed rgba(0, 229, 255, 0.2);
+    }
+
+    .ring-1 {
+      width: 650px;
+      height: 650px;
+      border: 1px solid rgba(0, 229, 255, 0.1);
+      border-top: 2px solid rgba(0, 229, 255, 0.5);
+      animation: spinClockwise 40s linear infinite;
+    }
+
+    .ring-2 {
+      width: 520px;
+      height: 520px;
+      border: 1px dotted rgba(0, 229, 255, 0.25);
+      border-bottom: 2px solid rgba(0, 229, 255, 0.6);
+      animation: spinCounterClockwise 30s linear infinite;
+    }
+
+    .ring-3 {
+      width: 380px;
+      height: 380px;
+      border: 2px solid rgba(0, 229, 255, 0.15);
+      border-left: 2px solid #00e5ff;
+      border-right: 2px solid #00e5ff;
+      animation: spinClockwise 20s linear infinite;
+    }
+
+    .ring-glow {
+      position: absolute;
+      width: 280px;
+      height: 280px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(0, 229, 255, 0.15) 0%, transparent 70%);
+      box-shadow: 0 0 30px rgba(0, 229, 255, 0.2) inset;
+    }
+
+    .iris-center-text {
+      text-align: center;
+      z-index: 4;
+    }
+
+    .iris-logo-icon {
+      font-size: 2.2rem;
+      color: #00e5ff;
+      text-shadow: 0 0 15px rgba(0, 229, 255, 0.8);
+      margin-bottom: 5px;
+    }
+
+    .iris-title {
+      font-size: 3rem;
+      letter-spacing: 12px;
+      color: #fff;
+      font-weight: bold;
+      text-shadow: 0 0 20px rgba(0, 229, 255, 0.9);
+      margin-left: 12px;
+    }
+
+    .iris-subtitle {
+      font-size: 0.8rem;
+      letter-spacing: 5px;
+      color: #00e5ff;
+      margin-top: 5px;
+      text-transform: uppercase;
+      opacity: 0.8;
+    }
+
+    @keyframes spinClockwise {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    @keyframes spinCounterClockwise {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(-360deg); }
+    }
+
+    /* --- INTERACTIVE MAP NODES --- */
+    .map-nodes {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+    }
+
+    .node {
+      position: absolute;
+      pointer-events: auto;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      transform: translate(-50%, -50%);
+      transition: transform 0.3s ease;
+      text-decoration: none;
+    }
+
+    .node:hover {
+      transform: translate(-50%, -50%) scale(1.08);
+    }
+
+    .node-icon-box {
+      width: 48px;
+      height: 48px;
+      background: rgba(2, 10, 20, 0.9);
+      border: 1px solid #00e5ff;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.2rem;
+      box-shadow: 0 0 15px rgba(0, 229, 255, 0.3);
+    }
+
+    .node-label-box {
+      background: rgba(2, 10, 20, 0.9);
+      border: 1px solid rgba(0, 229, 255, 0.4);
+      padding: 8px 16px;
+      font-size: 0.8rem;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      border-radius: 4px;
+      color: #fff;
+      white-space: nowrap;
+      box-shadow: 0 0 15px rgba(0, 229, 255, 0.15);
+    }
+
+    /* --- CORNER AUXILIARY PANELS --- */
+    .corner-panel-tl {
+      position: absolute;
+      top: 145px;
+      left: 40px;
+      font-size: 0.7rem;
+      letter-spacing: 2px;
+      color: #8892b0;
+      z-index: 5;
+      pointer-events: none;
+      border-left: 2px solid #00e5ff;
+      padding-left: 10px;
+    }
+
+    .corner-panel-bl {
+      position: absolute;
+      bottom: 30px;
+      left: 120px;
+      font-size: 0.75rem;
+      letter-spacing: 2px;
+      color: #8892b0;
+      z-index: 5;
+      pointer-events: none;
+    }
+
+    .corner-panel-br {
+      position: absolute;
+      bottom: 30px;
+      right: 40px;
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      font-size: 0.75rem;
+      letter-spacing: 2px;
+      color: #8892b0;
+      z-index: 5;
+      pointer-events: none;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Background Audio Element -->
+  <audio id="bgAudio" loop preload="auto">
+    <source src="song ejen ali.mp3" type="audio/mpeg">
+    Your browser does not support the audio element.
+  </audio>
+
+  <div class="workspace" id="workspace">
+    <!-- Animated Command Center Background Ecosystem -->
+    <div class="command-bg">
+      <div class="bg-grid" id="grid"></div>
+      <div class="hex-pattern"></div>
+      <canvas id="networkCanvas"></canvas>
+      <div class="scan-wave"></div>
+      <div class="bg-particles" id="particlesContainer"></div>
+    </div>
+
+    <!-- Top Header Layout -->
+    <div class="hud-top">
+      <div class="hud-logo-container">
+        <img src="ejenali.png" alt="Ejen Ali Logo" class="hud-logo" onerror="this.style.display='none'; document.getElementById('fallback-logo-text').style.display='block';">
+        <span id="fallback-logo-text" style="display:none; font-weight:bold; letter-spacing:2px; color:#fff; border-left:3px solid #00e5ff; padding-left:10px; font-size: 1.5rem;">EJEN ALI</span>
+      </div>
+
+      <div class="top-right-actions">
+        <!-- Login button linking to login.html -->
+        <a href="login.html" class="action-btn">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4M10 17l5-5-5-5M13 12H3"/></svg>
+          Login
+        </a>
+        <!-- Audio Toggle Button -->
+        <button class="action-btn" id="audioToggleBtn" onclick="toggleAudio()">
+          🔊 Sound: <span id="audioStatusText">OFF</span>
+        </button>
+        <button class="action-btn menu-btn" onclick="toggleMenuPanel()">
+          ☰ Menu
+        </button>
+      </div>
+    </div>
+
+    <!-- Sliding Navigation Panel Wrapper -->
+    <div class="nav-slider-wrapper" id="navSliderWrapper">
+      <div class="top-nav-menu">
+        <a href="about.html" class="top-nav-link">
+          <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
+          About
+        </a>
+        <a href="series.html" class="top-nav-link">
+          <svg viewBox="0 0 24 24"><path d="M18 4l2 4h-3l-2-4h-2l2 4h-3l-2-4H8l2 4H7L5 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V4h-4z"/></svg>
+          Series & Movies
+        </a>
+        <a href="charaters.html" class="top-nav-link">
+          <svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+          Character
+        </a>
+        <a href="news.html" class="top-nav-link">
+          <svg viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 14H4V8l8 5 8-5v10zm-8-7L4 6h16l-8 5z"/></svg>
+          News
+        </a>
+      </div>
+    </div>
+
+    <!-- Top Left Corner Terminal Readout -->
+    <div class="corner-panel-tl">
+      <p style="color:#00e5ff; margin-bottom: 4px;">• IRIS NETWORK</p>
+      <p>CONNECTION: SECURE</p>
+    </div>
+
+    <!-- SINGLE WRAPPER PARENT CONTAINER FOR THE ENTIRE CENTER SECTION -->
+    <div class="centered-hud-group" id="centeredHudGroup">
+      <!-- Centered IRIS Control Hub Radar & Animations -->
+      <div class="iris-hub-container">
+        <div class="iris-ring ring-1"></div>
+        <div class="iris-ring ring-2"></div>
+        <div class="iris-ring ring-3"></div>
+        <div class="ring-glow"></div>
+        <div class="iris-center-text">
+          <div class="iris-logo-icon">🛡️</div>
+          <div class="iris-title">IRIS</div>
+          <div class="iris-subtitle">System Online</div>
+        </div>
+      </div>
+
+      <!-- Interactive Navigation & Information Nodes Attached to Center Section -->
+      <div class="map-nodes">
+        <a href="about.html" class="node" style="top: 20%; left: 46.25%;">
+          <div class="node-icon-box">🛡️</div>
+          <div class="node-label-box">About M.I.S.I.</div>
+        </a>
+
+        <a href="series.html" class="node" style="top: 50%; left: 10%;">
+          <div class="node-icon-box">🎬</div>
+          <div class="node-label-box">Series & Movies</div>
+        </a>
+
+        <a href="charaters.html" class="node" style="top: 80%; left: 46.25%;">
+          <div class="node-icon-box">🤖</div>
+          <div class="node-label-box">Character</div>
+        </a>
+
+        <a href="news.html" class="node" style="top: 50%; left: 77.5%;">
+          <div class="node-icon-box">📡</div>
+          <div class="node-label-box">News</div>
+        </a>
+      </div>
+    </div>
+
+    <!-- Right Side: Ejen Ali Image Showcase Frame -->
+    <div class="character-showcase">
+      <img src="ejenalicharacter.png" alt="Ejen Ali" onerror="this.style.display='none'; document.getElementById('fallback-text').style.display='block';">
+      <div id="fallback-text" style="display:none; color: #8892b0; font-size:0.8rem; text-align:center;">
+        [ Place <b>ejenalicharacter.png</b> in folder ]
+      </div>
+      <div class="character-tag">AGENT: ALI (I.R.I.S)</div>
+    </div>
+
+    <!-- Bottom Left Status -->
+    <div class="corner-panel-bl">
+      <p style="color:#00e5ff; margin-bottom: 4px;">• SYSTEM STATUS</p>
+      <p>ALL SYSTEMS OPERATIONAL</p>
+    </div>
+
+    <!-- Bottom Right Corner -->
+    <div class="corner-panel-br">
+    </div>
+
+    <!-- Left Side Vertical Social Media Icons Sidebar -->
+    <div class="footer-social-container">
+      <a href="https://www.instagram.com/ejen_ali?igsh=MTcwM21oa3Nxb3l5OA==" target="_blank" class="social-icon-btn" title="Instagram">
+        <svg viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
+      </a>
+      <a href="https://www.facebook.com/ejenali/mentions/" target="_blank" class="social-icon-btn" title="Facebook">
+        <svg viewBox="0 0 24 24"><path d="M9 8h-3v4h3v12h5v-12h3.642l.358-4h-4v-1.667c0-.955.192-1.333 1.115-1.333h2.885v-5h-3.808c-3.596 0-5.192 1.583-5.192 4.615v3.385z"/></svg>
+      </a>
+      <a href="https://www.tiktok.com/@officialejenali?_r=1" target="_blank" class="social-icon-btn" title="TikTok">
+        <svg viewBox="0 0 24 24"><path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 3.2 15.7a6.34 6.34 0 0 0 10.86 4.43v-7.15a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1.24-.51z"/></svg>
+      </a>
+      <a href="https://youtube.com/@ejenali?si=VNiB6HR75ha7tanE" target="_blank" class="social-icon-btn" title="YouTube">
+        <svg viewBox="0 0 24 24"><path d="M19.615 3.184c-3.604-.246-11.631-.245-15.23 0-3.897.266-4.356 2.62-4.385 8.816.029 6.185.484 8.549 4.385 8.816 3.6.245 11.626.246 15.23 0 3.897-.266 4.356-2.62 4.385-8.816-.029-6.185-.484-8.549-4.385-8.816zm-10.615 12.816v-8l8 3.993-8 4.007z"/></svg>
+      </a>
+    </div>
+  </div>
+
+  <script>
+    // --- AUDIO PERSISTENT SYSTEM ---
+    const bgAudio = document.getElementById('bgAudio');
+    const audioStatusText = document.getElementById('audioStatusText');
+
+    function updateAudioButtonUI(isPlaying) {
+      if (isPlaying) {
+        audioStatusText.textContent = "ON";
+      } else {
+        audioStatusText.textContent = "OFF";
+      }
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      const savedTime = localStorage.getItem('ejenAliAudioTime');
+      const isPlaying = localStorage.getItem('ejenAliAudioPlaying') === 'true';
+
+      if (savedTime) {
+        bgAudio.currentTime = parseFloat(savedTime);
+      }
+
+      updateAudioButtonUI(isPlaying);
+
+      if (isPlaying) {
+        bgAudio.play().catch(error => {
+          console.log("Autoplay disekat oleh pelayar:", error);
+          localStorage.setItem('ejenAliAudioPlaying', 'false');
+          updateAudioButtonUI(false);
+        });
+      }
+    });
+
+    setInterval(() => {
+      if (!bgAudio.paused) {
+        localStorage.setItem('ejenAliAudioTime', bgAudio.currentTime);
+      }
+    }, 500);
+
+    function toggleAudio() {
+      if (bgAudio.paused) {
+        bgAudio.play().then(() => {
+          localStorage.setItem('ejenAliAudioPlaying', 'true');
+          updateAudioButtonUI(true);
+        }).catch(err => console.log("Ralat memainkan audio:", err));
+      } else {
+        bgAudio.pause();
+        localStorage.setItem('ejenAliAudioPlaying', 'false');
+        updateAudioButtonUI(false);
+      }
+    }
+
+    // Particles Background Logic
+    const particleContainer = document.getElementById('particlesContainer');
+    for (let i = 0; i < 30; i++) {
+      const p = document.createElement('div');
+      p.className = 'particle';
+      p.style.left = Math.random() * 100 + '%';
+      p.style.top = Math.random() * 100 + '%';
+      p.style.animationDuration = (5 + Math.random() * 6) + 's';
+      p.style.animationDelay = (Math.random() * 5) + 's';
+      particleContainer.appendChild(p);
+    }
+
+    // Canvas Network Nodes Logic
+    const canvas = document.getElementById('networkCanvas');
+    const ctx = canvas.getContext('2d');
+
+    function resizeCanvas() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+
+    const nodesArr = [];
+    const nodeCount = 30;
+
+    for (let i = 0; i < nodeCount; i++) {
+      nodesArr.push({
+        x: Math.random() * canvas.width,
+        y: Math.random() * canvas.height,
+        vx: (Math.random() - 0.5) * 0.3,
+        vy: (Math.random() - 0.5) * 0.3,
+        radius: Math.random() * 1.5 + 1
+      });
+    }
+
+    function animateNetwork() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = 'rgba(0, 229, 255, 0.5)';
+      ctx.strokeStyle = 'rgba(0, 229, 255, 0.1)';
+      ctx.lineWidth = 0.8;
+
+      for (let i = 0; i < nodesArr.length; i++) {
+        let node = nodesArr[i];
+        node.x += node.vx;
+        node.y += node.vy;
+
+        if (node.x < 0 || node.x > canvas.width) node.vx *= -1;
+        if (node.y < 0 || node.y > canvas.height) node.vy *= -1;
+
+        ctx.beginPath();
+        ctx.arc(node.x, node.y, node.radius, 0, Math.PI * 2);
+        ctx.fill();
+
+        for (let j = i + 1; j < nodesArr.length; j++) {
+          let nextNode = nodesArr[j];
+          let dx = node.x - nextNode.x;
+          let dy = node.y - nextNode.y;
+          let dist = Math.sqrt(dx * dx + dy * dy);
+
+          if (dist < 150) {
+            ctx.beginPath();
+            ctx.moveTo(node.x, node.y);
+            ctx.lineTo(nextNode.x, nextNode.y);
+            ctx.stroke();
+          }
+        }
+      }
+      requestAnimationFrame(animateNetwork);
+    }
+    animateNetwork();
+
+    // Map Drag Parallax Logic
+    const workspace = document.getElementById('workspace');
+    const grid = document.getElementById('grid');
+    const centeredHudGroup = document.getElementById('centeredHudGroup');
+
+    let isDragging = false;
+    let startX, startY;
+    let posX = 0, posY = 0;
+
+    workspace.addEventListener('mousedown', (e) => {
+      if (e.target.closest('.character-showcase') || e.target.closest('.hud-top') || e.target.closest('.nav-slider-wrapper') || e.target.closest('.action-btn') || e.target.closest('.social-icon-btn') || e.target.closest('.node')) return;
+      isDragging = true;
+      startX = e.clientX - posX;
+      startY = e.clientY - posY;
+    });
+
+    window.addEventListener('mousemove', (e) => {
+      if (!isDragging) return;
+      posX = e.clientX - startX;
+      posY = e.clientY - startY;
+      
+      posX = Math.max(Math.min(posX, 150), -150);
+      posY = Math.max(Math.min(posY, 150), -150);
+
+      grid.style.transform = `translate(${posX}px, ${posY}px) rotate(0deg)`;
+      centeredHudGroup.style.transform = `translate(calc(-50% + ${posX}px), calc(-50% + ${posY}px))`;
+    });
+
+    window.addEventListener('mouseup', () => {
+      isDragging = false;
+    });
+
+    // MENU Button Toggle Logic for Holographic Navigation Panel Slide
+    function toggleMenuPanel() {
+      const navSliderWrapper = document.getElementById('navSliderWrapper');
+      navSliderWrapper.classList.toggle('panel-visible');
+    }
+  </script>
+</body>
+</html>

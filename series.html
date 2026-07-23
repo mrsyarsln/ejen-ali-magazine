@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>M.A.T.A. - Series & Movies</title>
+  <style>
+    /* Reset & Dark Cyber Theme */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body, html {
+      width: 100%;
+      height: 100vh;
+      overflow: hidden;
+      font-family: 'Courier New', Courier, monospace;
+      background-color: #0b0f19;
+      color: #fff;
+      user-select: none;
+      position: relative;
+    }
+
+    /* --- FULL-PAGE BACKGROUND ARTWORK --- */
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background-image: url('img/bg4.jpg');
+      background-position: center;
+      background-repeat: no-repeat;
+      background-size: cover;
+      opacity: 0.15; /* Low opacity around 15% */
+      pointer-events: none; /* Allows clicks to pass through */
+      z-index: 1; /* Placed above background layer so it is visible */
+    }
+
+    /* --- DARK THEME OVERLAY FOR READABILITY --- */
+    body::after {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background-color: rgba(11, 15, 25, 0.85); /* Maintains website color theme */
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* Top Header Bar */
+    header {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 30px 50px;
+      z-index: 20;
+    }
+
+    .center-title {
+      font-size: 1.4rem;
+      letter-spacing: 4px;
+      font-weight: bold;
+      color: #00e5ff;
+    }
+
+    /* Left Side Info Banner */
+    .side-info {
+      position: absolute;
+      top: 130px;
+      left: 50px;
+      width: 320px;
+      z-index: 20;
+      pointer-events: none;
+    }
+
+    .side-info h1 {
+      font-size: 1.6rem;
+      color: #fff;
+      margin-bottom: 12px;
+      letter-spacing: 1px;
+      line-height: 1.3;
+    }
+
+    .side-info p {
+      color: #8892b0;
+      font-size: 0.85rem;
+      line-height: 1.6;
+    }
+
+    /* Simple Bottom-Left Back Link */
+    .bottom-back-link {
+      position: fixed;
+      bottom: 70px;
+      left: 50px;
+      z-index: 30;
+      color: #00e5ff;
+      text-decoration: none;
+      font-size: 0.9rem;
+      letter-spacing: 1px;
+      background: rgba(0, 229, 255, 0.1);
+      border: 1px solid rgba(0, 229, 255, 0.3);
+      padding: 8px 16px;
+      border-radius: 20px;
+      transition: background 0.3s;
+    }
+
+    .bottom-back-link:hover {
+      background: rgba(0, 229, 255, 0.2);
+    }
+
+    /* Interactive Drag-to-Scroll Workspace */
+    .workspace {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      overflow-x: auto;
+      overflow-y: hidden;
+      scroll-behavior: smooth;
+      scrollbar-width: none;
+      z-index: 10;
+    }
+
+    .workspace::-webkit-scrollbar {
+      display: none;
+    }
+
+    /* Gallery Track containing tilted cards */
+    .gallery-track {
+      display: flex;
+      gap: 40px;
+      padding-left: 420px;
+      padding-right: 150px;
+      align-items: center;
+    }
+
+    /* Individual Tilted Comic Card */
+    .media-card {
+      flex: 0 0 280px;
+      height: 420px;
+      background: rgba(10, 25, 47, 0.9);
+      border: 1px solid rgba(0, 229, 255, 0.3);
+      border-radius: 16px;
+      overflow: hidden;
+      position: relative;
+      transform: rotate(-4deg);
+      transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1), border-color 0.4s ease, box-shadow 0.4s ease;
+      box-shadow: 0 15px 35px rgba(0,0,0,0.6);
+      text-decoration: none;
+      display: block;
+    }
+
+    .media-card:nth-child(even) {
+      transform: rotate(4deg) translateY(20px);
+    }
+
+    .media-card:hover {
+      transform: rotate(0deg) scale(1.05) translateY(-10px);
+      border-color: #00e5ff;
+      box-shadow: 0 0 25px rgba(0, 229, 255, 0.4);
+      z-index: 10;
+    }
+
+    .media-card img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      opacity: 0.7;
+      transition: opacity 0.4s ease;
+    }
+
+    .media-card:hover img {
+      opacity: 0.9;
+    }
+
+    /* Card Footer Label */
+    .card-label {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      background: rgba(5, 11, 20, 0.9);
+      border-top: 1px solid rgba(0, 229, 255, 0.3);
+      padding: 15px;
+      text-align: center;
+    }
+
+    .card-label span {
+      font-size: 0.7rem;
+      color: #00e5ff;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      display: block;
+      margin-bottom: 4px;
+    }
+
+    .card-label h3 {
+      font-size: 1rem;
+      color: #fff;
+      letter-spacing: 1px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Audio Elemen untuk mengekalkan lagu merentasi halaman -->
+  <audio id="bgAudio" src="song ejen ali.mp3" preload="auto" loop></audio>
+
+  <!-- Top Navigation Header -->
+  <header>
+    <div class="center-title">M.A.T.A. ARCHIVES</div>
+  </header>
+
+  <!-- Fixed Left Description Banner -->
+  <div class="side-info">
+    <h1>SERIES & MOVIES ARCHIVE</h1>
+    <p>Explore the complete interactive broadcast history of Ejen Ali. Drag left or right to discover missions, seasons, and cinematic operations across Cyberaya.</p>
+  </div>
+
+  <!-- Bottom Left Back Link dengan fungsi simpan masa audio -->
+  <a href="home.html" class="bottom-back-link" onclick="saveAudioState()">← Back</a>
+
+  <!-- Horizontal Dragging Gallery Workspace -->
+  <div class="workspace" id="workspace">
+    <div class="gallery-track">
+      
+      <a href="https://watch.tonton.com.my/shows/ejenali-S1-series/seasons/1/episode/ejen-ali-S1E1" target="_blank" class="media-card">
+        <img src="s1.png" alt="Season 1">
+        <div class="card-label">
+          <span>Season 01</span>
+          <h3>MISSION: M.A.T.A</h3>
+        </div>
+      </a>
+
+      <a href="https://watch.tonton.com.my/shows/ejen-ali-S2-series/seasons/2/episode/ejen-ali-S2E1" target="_blank" class="media-card">
+        <img src="s2.png" alt="Season 2">
+        <div class="card-label">
+          <span>Season 02</span>
+          <h3>ARENA TRIALS</h3>
+        </div>
+      </a>
+
+      <a href="https://watch.tonton.com.my/shows/ejen-ali-S3-series/seasons/3/episode/ejen-ali-S3E1" target="_blank" class="media-card">
+        <img src="s3.png" alt="Season 3">
+        <div class="card-label">
+          <span>Season 03</span>
+          <h3>M.A.T.A ARENA</h3>
+        </div>
+      </a>
+
+      <a href="https://watch.tonton.com.my/movie/ejen-ali-the-movie" target="_blank" class="media-card">
+        <img src="s4.png" alt="The Movie">
+        <div class="card-label">
+          <span>Feature Film</span>
+          <h3>EJEN ALI: THE MOVIE</h3>
+        </div>
+      </a>
+
+      <a href="https://youtu.be/5nD1LWmAeKc?si=HvmBnLbU6bQJuoIr" target="_blank" class="media-card">
+        <img src="s5.png" alt="Mission: Neo">
+        <div class="card-label">
+          <span>Special Briefing</span>
+          <h3>PROJECT: NEO</h3>
+        </div>
+      </a>
+
+    </div>
+  </div>
+
+  <script>
+    const bgAudio = document.getElementById('bgAudio');
+
+    // Baca masa semasa lagu dari LocalStorage apabila halaman dimuatkan
+    window.addEventListener('DOMContentLoaded', () => {
+      const savedTime = localStorage.getItem('ejenAliAudioTime');
+      const isPlaying = localStorage.getItem('ejenAliAudioPlaying') === 'true';
+
+      if (savedTime) {
+        bgAudio.currentTime = parseFloat(savedTime);
+      }
+
+      if (isPlaying) {
+        bgAudio.play().catch(() => {
+          // Jika pelayar menyekat autoplay, buka kunci dengan klik pertama
+          const unlockAudio = () => {
+            bgAudio.play();
+            localStorage.setItem('ejenAliAudioPlaying', 'true');
+            window.removeEventListener('click', unlockAudio);
+          };
+          window.addEventListener('click', unlockAudio);
+        });
+      }
+    });
+
+    // Simpan masa lagu ke LocalStorage setiap 0.5 saat
+    setInterval(() => {
+      if (!bgAudio.paused) {
+        localStorage.setItem('ejenAliAudioTime', bgAudio.currentTime);
+        localStorage.setItem('ejenAliAudioPlaying', 'true');
+      }
+    }, 500);
+
+    // Fungsi untuk simpan status apabila klik butang Kembali (Back)
+    function saveAudioState() {
+      localStorage.setItem('ejenAliAudioTime', bgAudio.currentTime);
+      localStorage.setItem('ejenAliAudioPlaying', !bgAudio.paused);
+    }
+
+    // Mouse Moving / Dragging to Scroll Workspace (prevent drag click interference)
+    const workspace = document.getElementById('workspace');
+    let isDown = false;
+    let startX;
+    let scrollLeft;
+    let hasMoved = false;
+
+    workspace.addEventListener('mousedown', (e) => {
+      isDown = true;
+      hasMoved = false;
+      startX = e.pageX - workspace.offsetLeft;
+      scrollLeft = workspace.scrollLeft;
+    });
+
+    workspace.addEventListener('mouseleave', () => {
+      isDown = false;
+    });
+
+    workspace.addEventListener('mouseup', () => {
+      isDown = false;
+    });
+
+    workspace.addEventListener('mousemove', (e) => {
+      if (!isDown) return;
+      const x = e.pageX - workspace.offsetLeft;
+      if (Math.abs(x - startX) > 5) {
+        hasMoved = true;
+      }
+      const walk = (x - startX) * 2; // scroll speed
+      workspace.scrollLeft = scrollLeft - walk;
+    });
+
+    // Prevent navigation if the user was dragging the workspace
+    const mediaCards = document.querySelectorAll('.media-card');
+    mediaCards.forEach(card => {
+      card.addEventListener('click', (e) => {
+        if (hasMoved) {
+          e.preventDefault();
+        }
+      });
+    });
+  </script>
+
+</body>
+</html>

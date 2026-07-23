@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ejen Ali Smooth Scroll Animation</title>
+  <style>
+    /* Reset */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Courier New', Courier, monospace;
+      background-color: #020408;
+      color: #00e5ff;
+      position: relative;
+      overflow-x: hidden;
+    }
+
+    /* --- FULL-PAGE BACKGROUND ARTWORK WITH SLOW ZOOM ANIMATION --- */
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      
+      background-image: url('img/bg3.jpg');
+      
+      background-position: center;
+      background-repeat: no-repeat;
+      background-size: cover;
+      background-attachment: fixed;
+      opacity: 0.15; /* Low opacity around 15% */
+      pointer-events: none; /* Allows clicks to pass through */
+      z-index: 1; /* Placed above the dark overlay so it is visible */
+      animation: backgroundPulse 15s ease-in-out infinite alternate;
+    }
+
+    /* Subtle zoom and pulse animation keyframes */
+    @keyframes backgroundPulse {
+      0% {
+        transform: scale(1);
+        filter: brightness(1);
+      }
+      100% {
+        transform: scale(1.08);
+        filter: brightness(1.2);
+      }
+    }
+
+    /* --- DARK THEME OVERLAY FOR READABILITY --- */
+    body::after {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background-color: rgba(2, 4, 8, 0.85); /* Maintains website color theme */
+      pointer-events: none;
+      z-index: -1;
+    }
+
+    /* --- TOP HEADER NAVIGATION CONTAINER WITH BACK BUTTON --- */
+    .top-header-bar {
+      position: absolute;
+      top: 20px;
+      left: 40px;
+      right: 40px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      z-index: 1000;
+    }
+
+    .back-link {
+      color: #00e5ff;
+      text-decoration: none;
+      font-size: 0.95rem;
+      letter-spacing: 1px;
+      background: rgba(6, 16, 30, 0.85);
+      border: 1px solid rgba(0, 229, 255, 0.3);
+      padding: 8px 16px;
+      border-radius: 8px;
+      backdrop-filter: blur(6px);
+      box-shadow: 0 0 15px rgba(0, 229, 255, 0.15);
+      transition: all 0.3s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .back-link:hover {
+      background: rgba(0, 229, 255, 0.15);
+      box-shadow: 0 0 20px rgba(0, 229, 255, 0.4);
+      text-shadow: 0 0 8px rgba(0, 229, 255, 0.8);
+    }
+
+    header {
+      text-align: center;
+      padding: 60px 20px;
+      background: radial-gradient(circle at center, #06101e 0%, #020408 80%);
+    }
+
+    header h1 {
+      font-size: 2.5rem;
+      margin-bottom: 10px;
+      color: #00e5ff;
+      text-shadow: 0 0 10px rgba(0, 229, 255, 0.9);
+      letter-spacing: 3px;
+      text-transform: uppercase;
+    }
+
+    header p {
+      color: rgba(0, 229, 255, 0.7);
+      letter-spacing: 1px;
+    }
+
+    /* Layout Container */
+    .container {
+      display: flex;
+      max-width: 1000px;
+      margin: 0 auto;
+      position: relative;
+      padding-bottom: 50vh;
+      background: transparent;
+    }
+
+    /* Left Side: Text Sections with Progress Line */
+    .left-content {
+      width: 50%;
+      position: relative;
+      padding-left: 50px;
+    }
+
+    /* The vertical progress line */
+    .progress-track {
+      position: absolute;
+      left: 15px;
+      top: 0;
+      bottom: 0;
+      width: 6px;
+      background-color: rgba(0, 229, 255, 0.1);
+      border-radius: 3px;
+    }
+
+    .progress-fill {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 0%;
+      background-color: #00e5ff;
+      box-shadow: 0 0 10px #00e5ff;
+      border-radius: 3px;
+    }
+
+    /* The moving IRIS logo icon (enlarged) */
+    .moving-robot {
+      position: absolute;
+      left: -22px;
+      top: 0%;
+      transform: translateY(-50%);
+      will-change: top;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .moving-robot img {
+      width: 52px;
+      height: 52px;
+      object-fit: contain;
+      display: block;
+      filter: drop-shadow(0 0 10px rgba(0, 229, 255, 0.9));
+    }
+
+    .section-item {
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .section-item h3 {
+      font-size: 2rem;
+      margin-bottom: 10px;
+      color: #00e5ff;
+      text-shadow: 0 0 8px rgba(0, 229, 255, 0.6);
+      letter-spacing: 2px;
+    }
+
+    .section-item p {
+      font-size: 1.1rem;
+      color: rgba(255, 255, 255, 0.85);
+      line-height: 1.6;
+    }
+
+    /* Right Side: Sticky Card Container */
+    .right-sticky {
+      width: 50%;
+      height: 100vh;
+      position: sticky;
+      top: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .character-card {
+      width: 380px;
+      height: 440px;
+      background-color: rgba(6, 16, 30, 0.85);
+      color: #00e5ff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 20px;
+      border-radius: 20px;
+      box-shadow: 0 0 25px rgba(0, 229, 255, 0.2);
+      border: 1px solid rgba(0, 229, 255, 0.4);
+      backdrop-filter: blur(6px);
+      position: relative;
+    }
+
+    /* Style for individual character images */
+    .character-card img {
+      width: 100%;
+      height: 280px;
+      object-fit: cover;
+      border-radius: 12px;
+      margin-bottom: 15px;
+      border: 1px solid rgba(0, 229, 255, 0.3);
+      background: rgba(0, 229, 255, 0.05);
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      width: calc(100% - 40px);
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.3s ease, visibility 0.3s ease;
+    }
+
+    /* Active image style managed via JavaScript */
+    .character-card img.active {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .card-info {
+      margin-top: 270px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .character-card h2 {
+      font-size: 1.8rem;
+      margin-bottom: 5px;
+      color: #00e5ff;
+      text-shadow: 0 0 8px rgba(0, 229, 255, 0.8);
+    }
+
+    .character-card span {
+      font-size: 0.95rem;
+      background: rgba(0, 229, 255, 0.1);
+      color: #00e5ff;
+      border: 1px solid rgba(0, 229, 255, 0.3);
+      padding: 4px 12px;
+      border-radius: 20px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Audio Elemen untuk mengekalkan lagu merentasi halaman -->
+  <audio id="bgAudio" src="song ejen ali.mp3" preload="auto" loop></audio>
+
+  <!-- Top Navigation Bar containing Back Link -->
+  <div class="top-header-bar">
+    <a href="home.html" class="back-link" onclick="saveAudioState()">&larr; Back</a>
+  </div>
+
+  <header>
+    <h1>MAIN CHARACTERS</h1>
+    <p>Small team, big vision.</p>
+  </header>
+
+  <div class="container" id="scroll-container">
+    
+    <!-- Left Column: Text Sections + Progress Line & IRIS Icon -->
+    <div class="left-content" id="left-column">
+      <div class="progress-track">
+        <div class="progress-fill" id="progress-fill"></div>
+        <div class="moving-robot" id="moving-robot">
+          <img src="iris-logo.png" alt="IRIS Logo">
+        </div>
+      </div>
+      
+      <div class="section-item" data-index="0" data-name="EJEN ALI" data-pillar="Pillar: Inviso">
+        <h3>1. EJEN ALI</h3>
+        <p> Ejen Ali is the main protagonist of the Ejen Ali series and one of the youngest agents recruited into the secret intelligence agency MATA. His journey begins when he accidentally activates the IRIS device, a highly advanced piece of technology that was originally intended for professional agents. Despite having no formal training at first, Ali proves himself through determination, intelligence, and quick decision-making under pressure. Throughout the series, he learns that being a great agent is not only about strength or advanced gadgets but also about responsibility, teamwork, and making the right choices. His courage and willingness to protect others make him an inspiring hero admired by many fans.</p>
+      </div>
+
+      <div class="section-item" data-index="1" data-name="ALICIA" data-pillar="Pillar: Neuro">
+        <h3>2. EJEN ALICIA</h3>
+        <p>Alicia is one of MATA’s most talented and disciplined agents. She is well known for her exceptional combat skills, speed, and confidence during missions. Although she often appears serious and competitive, Alicia deeply values her teammates and always strives to complete every mission successfully. Her dedication to continuous training and self-improvement makes her one of the strongest young agents in the organization. She also serves as an inspiration to others by showing that hard work, discipline, and perseverance are the keys to becoming an excellent agent.</p>
+      </div>
+
+      <div class="section-item" data-index="2" data-name="EJEN BAKAR" data-pillar="Pillar: Combat">
+        <h3>3. EJEN BAKAR</h3>
+        <p>Ejen Bakar is Ali’s loyal and cheerful best friend who brings humor and positive energy to every mission. Even though he is not as experienced as some of the other agents, Bakar never hesitates to help his teammates whenever they need support. His optimism, bravery, and strong sense of friendship make him an important member of the team. Bakar demonstrates that every individual has unique strengths, and his kindness and willingness to work together contribute greatly to the success of many missions.</p>
+      </div>
+
+      <div class="section-item" data-index="3" data-name="COMOT" data-pillar="Pillar: Inviso (Pet)">
+        <h3>4. COMOT</h3>
+        <p>Comot is Ali’s beloved pet cat and one of the most recognizable characters in the Ejen Ali series. Although Comot appears to be an ordinary cat, he is intelligent, playful, and always stays close to Ali during important moments. His curious personality often leads him into unexpected situations, but he also brings comfort and emotional support to Ali whenever he faces difficult challenges. Comot represents the importance of loyalty and companionship, reminding viewers that even the smallest friend can have a big impact. His adorable behavior and funny expressions make him a fan-favorite character while adding warmth and humor to the story.</p>
+      </div>
+
+      <div class="section-item" data-index="4" data-name="EJEN RIZWAN" data-pillar="Pillar: Inviso">
+        <h3>5. EJEN RIZWAN</h3>
+        <p>Ejen Rizwan is one of MATA’s most experienced and respected senior agents. He is known for his calm personality, exceptional leadership skills, and extensive experience in handling high-risk intelligence missions. As a mentor to the younger agents, Rizwan plays an important role in guiding them to become more disciplined, responsible, and confident in carrying out their duties. He believes that successful missions require careful planning, teamwork, and trust among all members of the organization. Despite his serious and professional attitude, Rizwan genuinely cares about the safety and development of every agent under his guidance. His wisdom, dedication, and commitment to protecting Cyberaya make him one of the most dependable and admired agents in MATA.</p>
+      </div>
+    </div>
+
+    <!-- Right Column: Stays stuck on screen with Separate Image Elements -->
+    <div class="right-sticky">
+      <div class="character-card">
+        <!-- Separate individual image tags for each character -->
+        <img src="ejen ali 2.png" alt="Ejen Ali" class="active" id="img-0">
+        <img src="alicia_3-removebg-preview.png" alt="Ejen Alicia" id="img-1">
+        <img src="ejen_bakar-removebg-preview.png" alt="Ejen Bakar" id="img-2">
+        <img src="comot-removebg-preview.png" alt="Ejen Comot" id="img-3">
+        <img src="ejen_ridzuwan-removebg-preview.png" alt="Ejen Rudy" id="img-4">
+        
+        <div class="card-info">
+          <h2 id="card-name">Ejen Ali</h2>
+          <span id="card-pillar">Pillar: Inviso</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    const bgAudio = document.getElementById('bgAudio');
+
+    // Baca masa semasa lagu dari LocalStorage apabila halaman dimuatkan
+    window.addEventListener('DOMContentLoaded', () => {
+      const savedTime = localStorage.getItem('ejenAliAudioTime');
+      const isPlaying = localStorage.getItem('ejenAliAudioPlaying') === 'true';
+
+      if (savedTime) {
+        bgAudio.currentTime = parseFloat(savedTime);
+      }
+
+      if (isPlaying) {
+        bgAudio.play().catch(() => {
+          // Jika pelayar menyekat autoplay, buka kunci dengan klik pertama
+          const unlockAudio = () => {
+            bgAudio.play();
+            localStorage.setItem('ejenAliAudioPlaying', 'true');
+            window.removeEventListener('click', unlockAudio);
+          };
+          window.addEventListener('click', unlockAudio);
+        });
+      }
+    });
+
+    // Simpan masa lagu ke LocalStorage setiap 0.5 saat
+    setInterval(() => {
+      if (!bgAudio.paused) {
+        localStorage.setItem('ejenAliAudioTime', bgAudio.currentTime);
+        localStorage.setItem('ejenAliAudioPlaying', 'true');
+      }
+    }, 500);
+
+    // Fungsi untuk simpan status apabila klik butang Kembali (Back)
+    function saveAudioState() {
+      localStorage.setItem('ejenAliAudioTime', bgAudio.currentTime);
+      localStorage.setItem('ejenAliAudioPlaying', !bgAudio.paused);
+    }
+
+    // 1. Setup Text and Individual Image Switcher using Intersection Observer
+    const sections = document.querySelectorAll('.section-item');
+    const cardName = document.getElementById('card-name');
+    const cardPillar = document.getElementById('card-pillar');
+    const characterImages = document.querySelectorAll('.character-card img');
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          const index = entry.target.getAttribute('data-index');
+          cardName.textContent = entry.target.getAttribute('data-name');
+          cardPillar.textContent = entry.target.getAttribute('data-pillar');
+          
+          // Switch active image
+          characterImages.forEach(img => img.classList.remove('active'));
+          const activeImg = document.getElementById(`img-${index}`);
+          if (activeImg) {
+            activeImg.classList.add('active');
+          }
+        }
+      });
+    }, {
+      root: null,
+      rootMargin: '-50% 0px -50% 0px',
+      threshold: 0
+    });
+
+    sections.forEach(section => observer.observe(section));
+
+    // 2. Setup Smooth Gliding Animation using requestAnimationFrame & Lerp
+    const container = document.getElementById('scroll-container');
+    const fill = document.getElementById('progress-fill');
+    const robot = document.getElementById('moving-robot');
+
+    let targetPercentage = 0;
+    let currentPercentage = 0;
+
+    window.addEventListener('scroll', () => {
+      const rect = container.getBoundingClientRect();
+      const containerHeight = container.offsetHeight - window.innerHeight;
+      const scrollPos = -rect.top;
+
+      targetPercentage = (scrollPos / containerHeight) * 100;
+      if (targetPercentage < 0) targetPercentage = 0;
+      if (targetPercentage > 100) targetPercentage = 100;
+    });
+
+    function smoothAnimate() {
+      currentPercentage += (targetPercentage - currentPercentage) * 0.1;
+
+      fill.style.height = currentPercentage + '%';
+      robot.style.top = currentPercentage + '%';
+
+      requestAnimationFrame(smoothAnimate);
+    }
+
+    smoothAnimate();
+  </script>
+
+</body>
+</html>
